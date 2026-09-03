@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <title>{% block title %}❄️ゆきもり🌲{% endblock %}</title>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="apple-touch-icon" sizes="120x120" href="/favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/x-icon" href="/favicon/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png">
+
+  <style>
+    :root {
+      --bg: #fff3ed;
+      --card: #ffffff;
+      --menu: #fffaf7;
+
+      --border: #eadbd4;
+      --border-hover: #ddc8bf;
+
+      --text: #403735;
+      --text-secondary: #91817b;
+
+      --accent: #e59a83;
+      --accent-hover: #d98970;
+
+      --danger: #c75b5b;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+
+      background-color: var(--bg);
+      color: var(--text);
+
+      font-family:
+        "Microsoft JhengHei",
+        "Noto Sans TC",
+        sans-serif;
+
+      line-height: 1.6;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .logo {
+      position: absolute;
+      top: 28px;
+      left: 32px;
+
+      color: var(--text);
+      text-decoration: none;
+
+      font-size: 21px;
+      font-weight: 600;
+
+      letter-spacing: .04em;
+
+      transition: opacity .2s ease;
+    }
+
+    .logo:hover {
+      opacity: .65;
+    }
+
+    .page-content {
+      width: min(700px, calc(100vw - 40px));
+      margin: 0 auto;
+      padding-top: 120px;
+      padding-bottom: 60px;
+    }
+
+    /*
+     * Dark mode
+     */
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #211c1a;
+        --card: #292321;
+        --menu: #302927;
+
+        --border: #4a403c;
+        --border-hover: #5d504b;
+
+        --text: #f4ece8;
+        --text-secondary: #aa9b95;
+
+        --accent: #e29a83;
+        --accent-hover: #eea991;
+
+        --danger: #c96868;
+      }
+    }
+
+    /*
+     * Mobile
+     */
+
+    @media (max-width: 600px) {
+      .logo {
+        top: 22px;
+        left: 20px;
+
+        font-size: 20px;
+      }
+
+      .page-content {
+        width: calc(100vw - 32px);
+        padding-top: 95px;
+        padding-bottom: 40px;
+      }
+    }
+    </style>
+    {% if use_dialog %}
+    <style>
+    /*
+     * Dialog
+     */
+
+    .dialog-overlay {
+      position: fixed;
+      inset: 0;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      padding: 20px;
+
+      background: rgba(55, 42, 38, .38);
+
+      z-index: 10000;
+    }
+
+    .dialog {
+      width: min(420px, 100%);
+      max-height: 90dvh;
+
+      padding: 24px;
+
+      display: flex;
+      flex-direction: column;
+
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+
+      box-shadow:
+        0 16px 45px rgba(70, 45, 35, .14);
+    }
+
+    .dialog-header h2 {
+      margin: 0;
+    }
+
+    .dialog-header p {
+      margin: 8px 0 0;
+
+      color: var(--text-secondary);
+
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .dialog-body {
+      flex: 1;
+      overflow-y: auto;
+      margin-top: 4px;
+    }
+
+    .dialog-buttons {
+      display: flex;
+      flex-shrink: 0;
+
+      justify-content: flex-end;
+      gap: 10px;
+
+      margin-top: 22px;
+    }
+
+    .dialog-buttons button {
+      padding: 9px 17px;
+
+      border: 1px solid var(--border);
+      border-radius: 10px;
+
+      background: var(--menu);
+      color: var(--text);
+
+      font: inherit;
+      font-size: 15px;
+
+      cursor: pointer;
+
+      transition:
+        background-color .2s ease,
+        border-color .2s ease,
+        transform .1s ease;
+    }
+
+    .dialog-buttons button:hover {
+      background: #fff3ee;
+      border-color: var(--border-hover);
+    }
+
+    .dialog-buttons button:active {
+      transform: translateY(1px);
+    }
+
+    .dialog-primary {
+      background: var(--accent) !important;
+      border-color: var(--accent) !important;
+      color: #ffffff !important;
+    }
+
+    .dialog-primary:hover {
+      background: var(--accent-hover) !important;
+      border-color: var(--accent-hover) !important;
+    }
+
+    .dialog-danger {
+      background: var(--danger) !important;
+      border-color: var(--danger) !important;
+      color: #ffffff !important;
+    }
+
+    .dialog input {
+      width: 100%;
+      padding: 11px 13px;
+
+      border: 1px solid var(--border);
+      border-radius: 10px;
+
+      outline: none;
+
+      background: var(--menu);
+      color: var(--text);
+
+      font: inherit;
+      font-size: 16px;
+
+      transition:
+        border-color .2s ease,
+        box-shadow .2s ease;
+    }
+
+    .dialog input:focus {
+      border-color: var(--accent);
+
+      box-shadow:
+        0 0 0 3px rgba(229, 154, 131, .15);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .dialog-buttons button:hover {
+        background: #392f2c;
+      }
+
+      .dialog input:focus {
+        box-shadow:
+          0 0 0 3px rgba(226, 154, 131, .16);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .dialog {
+        padding: 20px;
+        border-radius: 16px;
+      }
+    }
+  </style>
+  {% endif %}
+  {% block head %}
+  {% endblock %}
+</head>
+
+<body>
+
+  <a class="logo" href="/">
+    ❄️ゆきもり🌲
+  </a>
+
+  <main class="page-content">
+    {% block content %}
+    {% endblock %}
+  </main>
+
+  {% if use_dialog %}
+  <!-- Dialog -->
+
+  <div id="dialogOverlay" class="dialog-overlay hidden">
+
+    <div class="dialog">
+
+      <div class="dialog-header">
+
+        <h2 id="dialogTitle"></h2>
+
+        <p id="dialogMessage"></p>
+
+      </div>
+
+      <div id="dialogBody" class="dialog-body">
+      </div>
+
+      <div id="dialogButtons" class="dialog-buttons">
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <script>
+    const dialogOverlay = document.getElementById("dialogOverlay");
+    const dialogTitle = document.getElementById("dialogTitle");
+    const dialogBody = document.getElementById("dialogBody");
+    const dialogMessage = document.getElementById("dialogMessage");
+    const dialogButtons = document.getElementById("dialogButtons");
+
+    function showDialog({
+      title = "",
+      body = null,
+      message = "",
+      buttons = [],
+      onOpen = null,
+      onClose = null
+    }) {
+      return new Promise(resolve => {
+        dialogTitle.textContent = title;
+        dialogBody.innerHTML = "";
+        dialogButtons.innerHTML = "";
+
+        if (message) {
+          dialogMessage.textContent = message;
+          dialogMessage.style.display = "";
+        } else {
+          dialogMessage.style.display = "none";
+        }
+
+        if (body)
+          dialogBody.append(body);
+
+        for (const button of buttons) {
+          const b = document.createElement("button");
+
+          b.textContent = button.text;
+          b.disabled = button.disabled ?? false;
+
+          if (button.primary)
+            b.classList.add("dialog-primary");
+
+          if (button.danger)
+            b.classList.add("dialog-danger");
+
+          b.addEventListener("click", () => {
+            close(button.value);
+          });
+
+          dialogButtons.appendChild(b);
+        }
+
+        dialogOverlay.classList.remove("hidden");
+
+        if (onOpen)
+          onOpen(dialogButtons);
+
+        function close(value) {
+          dialogOverlay.classList.add("hidden");
+
+          if (onClose)
+            onClose(value);
+
+          resolve(value);
+        }
+      });
+    }
+  </script>
+  {% endif %}
+  {% block scripts %}
+  {% endblock %}
+
+</body>
+</html>

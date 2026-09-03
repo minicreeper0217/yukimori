@@ -1,0 +1,571 @@
+{% extends "base.html" %}
+
+{% set use_dialog = true %}
+
+{% block title %}留言板 · ゆきもり{% endblock %}
+
+{% block head %}
+<style>
+  .board {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .board-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  .board-header h1 {
+    margin: 0;
+
+    font-size: 30px;
+    font-weight: 600;
+    letter-spacing: .03em;
+  }
+
+  .board-header p {
+    margin: 8px 0 0;
+
+    color: var(--text-secondary);
+
+    font-size: 15px;
+  }
+
+  .board-write {
+    flex-shrink: 0;
+
+    padding: 10px 18px;
+
+    border: 1px solid var(--accent);
+    border-radius: 11px;
+
+    background: var(--accent);
+    color: #ffffff;
+
+    font: inherit;
+    font-size: 15px;
+
+    cursor: pointer;
+
+    transition:
+      background-color .2s ease,
+      border-color .2s ease,
+      transform .1s ease;
+  }
+
+  .board-write:hover {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+  }
+
+  .board-write:active {
+    transform: translateY(1px);
+  }
+
+
+  /*
+   * Message list
+   */
+
+  .message-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .message-card {
+    padding: 20px 22px;
+
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+
+    box-shadow:
+      0 5px 20px rgba(70, 45, 35, .035);
+  }
+
+  .message-title {
+    margin: 0;
+
+    font-size: 17px;
+    font-weight: 600;
+  }
+
+  .message-content {
+    margin: 12px 0 0;
+
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+
+    color: var(--text);
+
+    font-size: 15px;
+    line-height: 1.8;
+  }
+
+  .message-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+
+    margin-top: 18px;
+
+    color: var(--text-secondary);
+
+    font-size: 13px;
+  }
+
+  .message-nickname {
+    font-weight: 500;
+  }
+
+  .message-date {
+    white-space: nowrap;
+  }
+
+
+  /*
+   * Empty state
+   */
+
+  .board-empty {
+    padding: 45px 20px;
+
+    color: var(--text-secondary);
+
+    text-align: center;
+
+    font-size: 15px;
+    line-height: 1.8;
+  }
+
+
+  /*
+   * Write dialog
+   */
+
+  .message-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    margin-top: 8px;
+  }
+
+  .message-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    font-size: 14px;
+  }
+
+  .message-form input,
+  .message-form textarea {
+    width: 100%;
+    padding: 10px 12px;
+
+    border: 1px solid var(--border);
+    border-radius: 10px;
+
+    outline: none;
+
+    background: var(--menu);
+    color: var(--text);
+
+    font: inherit;
+    font-size: 15px;
+
+    transition:
+      border-color .2s ease,
+      box-shadow .2s ease;
+  }
+
+  .message-form input:focus,
+  .message-form textarea:focus {
+    border-color: var(--accent);
+
+    box-shadow:
+      0 0 0 3px rgba(229, 154, 131, .15);
+  }
+
+  .message-form textarea {
+    min-height: 130px;
+    resize: vertical;
+  }
+
+  .message-rules {
+    color: var(--text);
+
+    font-size: 14px;
+    line-height: 1.8;
+  }
+
+  .message-rules p {
+    margin: 12px 0 12px;
+  }
+
+  .message-rules ul {
+    margin: 0;
+    padding-left: 22px;
+  }
+
+  .message-rules li + li {
+    margin-top: 5px;
+  }
+
+  .form-status {
+    margin-top: 8px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    text-align: center;
+    min-height: 1.4em;
+  }
+
+  .form-status.hidden {
+    display: none;
+  }
+
+  @media (max-width: 600px) {
+    .board-header {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .board-header h1 {
+      font-size: 27px;
+    }
+
+    .board-write {
+      align-self: flex-start;
+    }
+
+    .message-card {
+      padding: 18px 19px;
+    }
+
+    .message-meta {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 4px;
+    }
+  }
+</style>
+
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" defer></script>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="board">
+
+  <header class="board-header">
+
+    <div>
+      <h1>留言板</h1>
+
+      <p>
+        在這裡留下你對生活的想法。
+      </p>
+    </div>
+
+    <button
+      id="writeMessageButton"
+      class="board-write"
+      type="button"
+    >
+      留下留言
+    </button>
+
+  </header>
+
+
+  <section class="message-list">
+
+    {% for message in messages %}
+
+      <article class="message-card">
+
+        <h2 class="message-title">
+          {{ message.title }}
+        </h2>
+
+        <p class="message-content">{{ message.content }}</p>
+
+        <div class="message-meta">
+
+          <span class="message-nickname">
+            {{ message.nickname }}
+          </span>
+
+          <time class="message-date" datetime="{{ message.created_at.isoformat() }}">
+            {{ message.created_at.strftime("%Y/%m/%d %H:%M") }}
+          </time>
+
+        </div>
+
+      </article>
+
+    {% else %}
+
+      <div class="board-empty">
+        目前還沒有留言。<br>
+        成為第一個留下話語的人吧。
+      </div>
+
+    {% endfor %}
+
+  </section>
+
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+let widgetId;
+
+document
+  .getElementById("writeMessageButton")
+  .addEventListener("click", async () => {
+    const rules = document.createElement("div");
+    rules.className = "message-rules";
+    rules.innerHTML = `
+      <p>請在留言前閱讀以下規則：</p>
+      <ul>
+        <li>禁止攻擊、騷擾或侮辱他人</li>
+        <li>禁止歧視、仇恨或針對他人的挑釁性言論</li>
+        <li>禁止冒充他人</li>
+        <li>禁止違法、色情或令人不適的內容</li>
+        <li>禁止發布他人的個人資料</li>
+        <li>禁止廣告、垃圾訊息或大量重複留言</li>
+        <li>禁止利用留言板進行惡意行為</li>
+      </ul>
+      <p>違反規則的留言可能會被管理員移除。</p>
+    `;
+
+    const agreed = await showDialog({
+      title: "留言板規則",
+      body: rules,
+      buttons: [
+        {
+          text: "取消",
+          value: false
+        },
+        {
+          text: "我同意",
+          value: true,
+          primary: true
+        }
+      ]
+    });
+
+    if (!agreed)
+      return;
+
+    const form = document.createElement("form");
+    form.className = "message-form";
+
+    form.innerHTML = `
+      <label>
+        暱稱
+        <input
+          name="nickname"
+          type="text"
+          maxlength="50"
+          required
+          autocomplete="nickname"
+        >
+      </label>
+
+      <label>
+        標題
+        <input
+          name="title"
+          type="text"
+          maxlength="100"
+          required
+        >
+      </label>
+
+      <label>
+        內容
+        <textarea
+          name="content"
+          maxlength="1000"
+          required
+        ></textarea>
+      </label>
+
+      <div id="turnstile"></div>
+
+      <div id="formStatus" class="form-status hidden"></div>
+    `;
+
+    let turnstileCompleted = false;
+    let showError = false;
+
+    const result = await showDialog({
+      title: "留下留言",
+      message: "想說些什麼呢？",
+      body: form,
+
+      buttons: [
+        {
+          text: "取消",
+          value: false
+        },
+        {
+          text: "送出",
+          value: true,
+          primary: true
+        }
+      ],
+
+      onOpen: (dialogButtons) => {
+        const submitButton =
+          dialogButtons.querySelector(".dialog-primary");
+
+        const formStatus =
+          form.querySelector("#formStatus");
+
+        const checkForm = () => {
+          const nickname =
+            form.elements.nickname.value.trim();
+
+          const title =
+            form.elements.title.value.trim();
+
+          const content =
+            form.elements.content.value.trim();
+
+          const missingFields = [];
+
+          if (!nickname)
+            missingFields.push("暱稱");
+
+          if (!title)
+            missingFields.push("標題");
+
+          if (!content)
+            missingFields.push("內容");
+
+          const valid =
+            missingFields.length === 0 &&
+            turnstileCompleted;
+
+          if (showError) {
+            if (missingFields.length > 0) {
+              formStatus.textContent =
+                `請填寫：${missingFields.join("、")}`;
+
+              formStatus.classList.remove("hidden");
+            } else if (!turnstileCompleted) {
+              formStatus.textContent = "請完成驗證";
+
+              formStatus.classList.remove("hidden");
+            } else {
+              formStatus.textContent = "";
+
+              formStatus.classList.add("hidden");
+            }
+          }
+
+          return valid;
+        };
+
+        form.addEventListener("input", () => {
+          showError = false;
+          formStatus.textContent = "";
+          formStatus.classList.add("hidden");
+
+          checkForm();
+        });
+
+        widgetId = turnstile.render("#turnstile", {
+          sitekey: "3x00000000000000000000FF",
+          action: "board",
+          size: "flexible",
+
+          callback: () => {
+            turnstileCompleted = true;
+
+            if (showError)
+              checkForm();
+          },
+
+          "expired-callback": () => {
+            turnstileCompleted = false;
+
+            if (showError)
+              checkForm();
+          },
+
+          "error-callback": () => {
+            turnstileCompleted = false;
+
+            if (showError)
+              checkForm();
+          }
+        });
+
+        // 讓 showDialog 的按鈕可以在真正關閉 Dialog 前驗證
+        submitButton.addEventListener("click", event => {
+          showError = true;
+
+          if (!checkForm()) {
+            event.stopImmediatePropagation();
+          }
+        }, true);
+      }
+    });
+
+    if (!result) {
+      if (widgetId !== undefined) {
+        turnstile.remove(widgetId);
+        widgetId = undefined;
+      }
+
+      return;
+    }
+
+    const formData = new FormData(form);
+
+    const response = await fetch("/api/board", {
+      method: "POST",
+      body: formData
+    });
+
+    if (widgetId !== undefined) {
+      turnstile.remove(widgetId);
+      widgetId = undefined;
+    }
+
+    if (response.ok) {
+      location.reload();
+      return;
+    }
+
+    await showDialog({
+      title: "送出失敗",
+      message: "留言沒有成功送出，請稍後再試。",
+      buttons: [
+        {
+          text: "知道了",
+          value: true,
+          primary: true
+        }
+      ]
+    });
+  });
+</script>
+
+{% endblock %}
