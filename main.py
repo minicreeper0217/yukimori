@@ -20,6 +20,13 @@ async def homepage(request:web.Request):
 		context=None
 	)
 
+@main_routes.get(path="/robots.txt")
+async def robots(request:web.Request):
+	with open(config.dir / "robots.txt", "r") as f:
+		txt = f.read()
+
+	return web.Response(status=200, text=txt) 
+
 @web.middleware
 async def middle(request:web.Request, handler):
 	if not request.headers.get('X-Real-IP') or not request.headers.get('User-Agent'):
