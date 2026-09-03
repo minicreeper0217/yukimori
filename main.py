@@ -50,7 +50,7 @@ async def run():
 	logger.setLevel(logging.INFO)
 	runner = web.AppRunner(app,access_log_format='%{X-Real-IP}i "%{X-Method}i" %s %{Content-Length}i "%{User-Agent}i" (%D)', access_log = logger)
 	await runner.setup()
-	site = web.TCPSite(runner, host='localhost',port=3050)
+	site = web.TCPSite(runner, host='localhost',port=3100)
 	await site.start()
 
 	try:
