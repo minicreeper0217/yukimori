@@ -292,6 +292,9 @@ async def parse_multipart(
   request: web.Request
 ) -> dict:
 
+  if request.content_type != "multipart/form-data":
+    return {}
+
   reader = await request.multipart()
   data = {}
 

@@ -41,8 +41,19 @@ async def board(request:web.Request):
 @rate_limit(limit=1, window=300)
 async def new_board(request:web.Request):
   data = await parse_multipart(request=request)
+  title = data.get("title")
+  content = data.get("content")
+  nickname = data.get("nickname")
+  turnstile_token = data.get("cf-turnstile-response")
 
-  turnstile_result = await turnstile_verify(data["cf-turnstile-response"], action="board")
+  if not all([title, content, nickname, turnstile_token]):
+    return APIResponse(
+      status=422,
+      success=False,
+      data={"message": "Unprocessable Entity"}
+    )
+
+  turnstile_result = await turnstile_verify(turnstile_token, action="board")
   if not turnstile_result:
     return APIResponse(
       status=401,
@@ -55,7 +66,7 @@ async def new_board(request:web.Request):
     cursor = await db.execute("""
     INSERT INTO messages (title, content, nickname, created_at)
     VALUES (?, ?, ?, ?)
-    """, (data["title"], data["content"], data["nickname"], now.isoformat()))
+    """, (title, content, nickname, now.isoformat()))
     message_id = cursor.lastrowid
     await db.commit()
 
