@@ -562,9 +562,11 @@ document
       return;
     }
 
+    const apiResult = await response.json();
+
     await showDialog({
       title: "送出失敗",
-      message: "留言沒有成功送出，請稍後再試。",
+      message: apiResult.data?.message || "留言沒有成功送出，請稍後再試。",
       buttons: [
         {
           text: "知道了",
