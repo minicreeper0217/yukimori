@@ -42,7 +42,7 @@ async def board(request:web.Request):
 async def new_board(request:web.Request):
   data = await parse_multipart(request=request)
 
-  turnstile_result = await turnstile_verify(data["cf-turnstile-response"])
+  turnstile_result = await turnstile_verify(data["cf-turnstile-response"], action="board")
   if not turnstile_result:
     return APIResponse(
       status=401,
