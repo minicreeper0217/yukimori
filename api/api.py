@@ -264,7 +264,7 @@ async def api_middle(
 
     return web.json_response(data=response.to_dict(), status=response.status)
 
-  except:
+  except Exception:
     logging.exception("API Handler Error!")
     return web.json_response(
       APIResponse(
