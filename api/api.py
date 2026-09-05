@@ -3,6 +3,7 @@ from typing import Any, Awaitable, Callable
 
 import time
 from collections import deque
+import logging
 
 from aiohttp import web
 
@@ -250,12 +251,30 @@ async def api_middle(
 
   # API Handler ----------------------------------------------------------------
 
-  response = await route.handler(
-    request,
-    **params
-  )
+  try:
+    response = await route.handler(
+      request,
+      **params
+    )
 
-  return web.json_response(data=response.to_dict(), status=response.status)
+    if not isinstance(response, APIResponse):
+      raise ValueError(
+        f"API Handler must return APIResponse, Not {type(response).__name__}."
+      )
+
+    return web.json_response(data=response.to_dict(), status=response.status)
+
+  except:
+    logging.exception("API Handler Error!")
+    return web.json_response(
+      APIResponse(
+        success=False,
+        data={
+          "message": "Internal Server Error"
+        }
+      ).to_dict(),
+      status=500
+    )
 
 
 # aiohttp registration --------------------------------------------------------
