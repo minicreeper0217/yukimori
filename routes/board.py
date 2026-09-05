@@ -53,6 +53,18 @@ async def new_board(request:web.Request):
       data={"message": "Unprocessable Entity"}
     )
 
+  title = title.strip()
+  content = content.strip()
+  nickname = nickname.strip()
+
+  # 清除空白之後再檢查一次
+  if not all([title, content, nickname]):
+    return APIResponse(
+      status=422,
+      success=False,
+      data={"message": "Unprocessable Entity"}
+    )
+
   turnstile_result = await turnstile_verify(turnstile_token, action="board")
   if not turnstile_result:
     return APIResponse(
@@ -72,7 +84,5 @@ async def new_board(request:web.Request):
 
   return APIResponse(
     success=True,
-    data={
-      "message_id": message_id
-    }
+    data={"message_id": message_id}
   )
