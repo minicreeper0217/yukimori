@@ -11,7 +11,7 @@ from aiohttp import web
 @dataclass
 class APIResponse:
   success: bool
-  data: dict
+  data: dict | list
   status: int = 200
 
   def to_dict(self) -> dict:
@@ -258,7 +258,7 @@ async def api_middle(
     )
 
     if not isinstance(response, APIResponse):
-      raise ValueError(
+      raise TypeError(
         f"API Handler must return APIResponse, Not {type(response).__name__}."
       )
 
