@@ -240,8 +240,12 @@
   }
 
   .required{
-      color: #ff4d4f;
-    }
+    color: #ff4d4f;
+  }
+
+  .label-text {
+    white-space: nowrap;
+  }
 
   @media (max-width: 600px) {
     .board-header {
@@ -389,7 +393,9 @@ document
 
     form.innerHTML = `
       <label>
-        暱稱 <span class="required">*</span>
+        <span class="label-text">
+          暱稱 <span class="required">*</span>
+        </span>
         <input
           name="nickname"
           type="text"
@@ -400,7 +406,9 @@ document
       </label>
 
       <label>
-        標題 <span class="required">*</span>
+        <span class="label-text">
+          標題 <span class="required">*</span>
+        </span>
         <input
           name="title"
           type="text"
@@ -410,7 +418,9 @@ document
       </label>
 
       <label>
-        內容 <span class="required">*</span>
+        <span class="label-text">
+          內容 <span class="required">*</span>
+        </span>
         <textarea
           name="content"
           maxlength="1000"
