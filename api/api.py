@@ -102,7 +102,7 @@ class Route:
 
 # Router -----------------------------------------------------------------------
 
-class Router:
+class APIRouter:
   routes: list[Route] = []
 
   @classmethod
@@ -212,7 +212,7 @@ async def api_middle(
   request: web.Request
 ) -> web.Response:
 
-  result = Router.match(
+  result = APIRouter.match(
     method=request.method,
     path=request.match_info["route"]
   )
