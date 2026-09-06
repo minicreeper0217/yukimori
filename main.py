@@ -9,6 +9,8 @@ import logging.handlers
 import config
 import asyncio
 from routes import routes
+import database
+import api
 
 main_routes = web.RouteTableDef()
 
@@ -20,11 +22,18 @@ async def homepage(request:web.Request):
 		context=None
 	)
 
+@main_routes.get(path="/robots.txt")
+async def robots(request:web.Request):
+	with open(config.dir / "robots.txt", "r") as f:
+		txt = f.read()
+
+	return web.Response(status=200, text=txt) 
+
 @web.middleware
 async def middle(request:web.Request, handler):
 	if not request.headers.get('X-Real-IP') or not request.headers.get('User-Agent'):
 		return web.Response(status=400,text="")
-	if all(request.method != x for x in ["GET", "POST"]):
+	if all(request.method != x for x in ["GET", "POST", "PATCH", "DELETE"]):
 		return web.Response(status=405,text="")
 	try:
 		if handler.__name__ == "_handle":
@@ -39,9 +48,11 @@ async def middle(request:web.Request, handler):
 		return web.Response(status=500,text=json.dumps(ex), content_type="application/json")
 
 async def run():
+	await database.init()
 	app = web.Application(client_max_size=8*(1024**2))
 	app.add_routes(main_routes)
 	app.add_routes(*routes)
+	api.register(app=app)
 	aiohttp_jinja2.setup(app=app,loader=jinja2.FileSystemLoader("html"))
 	handler = logging.handlers.RotatingFileHandler(filename=config.dir / 'logs' / 'webapplog.txt',maxBytes=1048576,backupCount=2,encoding="UTF-8")
 	handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
