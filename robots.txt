@@ -1,2 +1,8 @@
 User-agent: *
 Disallow: /api/
+
+User-agent: Baiduspider
+Disallow: /
+
+User-agent: bingbot
+Disallow: /
