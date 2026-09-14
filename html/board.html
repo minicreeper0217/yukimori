@@ -247,6 +247,59 @@
     white-space: nowrap;
   }
 
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+
+    margin-top: 8px;
+  }
+
+  .pagination a,
+  .pagination-current,
+  .pagination-ellipsis {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+
+    min-width: 36px;
+    height: 36px;
+
+    padding: 0 8px;
+
+    box-sizing: border-box;
+
+    border: 1px solid var(--border);
+    border-radius: 10px;
+
+    font-size: 14px;
+  }
+
+  .pagination a {
+    color: var(--text);
+    text-decoration: none;
+
+    transition:
+      background-color .2s ease,
+      border-color .2s ease;
+  }
+
+  .pagination a:hover {
+    background: var(--menu);
+    border-color: var(--accent);
+  }
+
+  .pagination-current {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #ffffff;
+  }
+
+  .pagination-ellipsis {
+    border-color: transparent;
+  }
+
   @media (max-width: 600px) {
     .board-header {
       align-items: stretch;
@@ -270,6 +323,10 @@
       align-items: flex-start;
       flex-direction: column;
       gap: 4px;
+    }
+
+    .pagination .pagination-distant {
+      display: none;
     }
   }
 </style>
@@ -339,6 +396,56 @@
     {% endfor %}
 
   </section>
+
+{% if total_pages > 1 %}
+  <nav class="pagination" aria-label="留言板分頁">
+
+    {% if page > 1 %}
+      <a href="/board?page={{ page - 1 }}" aria-label="上一頁">
+        ‹
+      </a>
+    {% endif %}
+
+    {% for page_number in pagination %}
+      {% if page_number is none %}
+
+        <span class="pagination-ellipsis">
+          …
+        </span>
+
+      {% elif page_number == page %}
+
+        <span
+          class="pagination-current"
+          aria-current="page"
+        >
+          {{ page_number }}
+        </span>
+
+      {% else %}
+
+        <a
+          href="/board?page={{ page_number }}"
+          {% if page_number != 1
+                and page_number != total_pages
+                and (page_number < page - 1 or page_number > page + 1) %}
+            class="pagination-distant"
+          {% endif %}
+        >
+          {{ page_number }}
+        </a>
+
+      {% endif %}
+    {% endfor %}
+
+    {% if page < total_pages %}
+      <a href="/board?page={{ page + 1 }}" aria-label="下一頁">
+        ›
+      </a>
+    {% endif %}
+
+  </nav>
+{% endif %}
 
 </div>
 
