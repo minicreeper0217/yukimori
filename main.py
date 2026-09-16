@@ -72,7 +72,6 @@ async def middle(request:web.Request, handler):
 		return web.Response(status=500,text=json.dumps(ex), content_type="application/json")
 
 async def context_processor(request):
-	print(request)
 	return {
 		"nonce": request.get("csp_nonce")
 	}
