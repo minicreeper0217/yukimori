@@ -53,6 +53,7 @@ async def middle(request:web.Request, handler):
 			response.headers["Content-Security-Policy"] = (
 				f"default-src 'self'; "
 				f"script-src 'self' 'nonce-{nonce}' https://challenges.cloudflare.com; "
+				f"style-src 'self' 'nonce-{nonce}'; "
 				f"object-src 'none'; "
 				f"base-uri 'self'; "
 				f"frame-ancestors 'none'; "
