@@ -11,6 +11,7 @@ import asyncio
 from routes import routes
 import database
 import api
+import secrets
 
 main_routes = web.RouteTableDef()
 
@@ -33,27 +34,63 @@ async def robots(request:web.Request):
 async def middle(request:web.Request, handler):
 	if not request.headers.get('X-Real-IP') or not request.headers.get('User-Agent'):
 		return web.Response(status=400,text="")
+
 	if all(request.method != x for x in ["GET", "POST", "PATCH", "DELETE"]):
 		return web.Response(status=405,text="")
+
 	try:
 		if handler.__name__ == "_handle":
 			return web.Response(status=404,text="")
+
+		is_api = request.path.startswith("/api/")
+		if not is_api:
+			nonce = secrets.token_urlsafe(32)
+			request["csp_nonce"] = nonce
+
 		response = await handler(request)
+
+		if not is_api:
+			response.headers["Content-Security-Policy"] = (
+				f"default-src 'self'; "
+				f"script-src 'self' 'nonce-{nonce}' https://challenges.cloudflare.com; "
+				f"object-src 'none'; "
+				f"base-uri 'self'; "
+				f"frame-ancestors 'none'; "
+				f"frame-src https://challenges.cloudflare.com; "
+				f"connect-src 'self'"
+			)
+
 		return response
+
 	except web_exceptions.HTTPNotFound:
 		return web.Response(status=404,text="")
+
 	except:
 		ex = {"Code": 500, "Message": "Internal_Server_Error"}
 		logging.exception(f"An error occurred while handling request!")
 		return web.Response(status=500,text=json.dumps(ex), content_type="application/json")
 
+async def context_processor(request):
+	print(request)
+	return {
+		"nonce": request.get("csp_nonce")
+	}
+
 async def run():
 	await database.init()
-	app = web.Application(client_max_size=8*(1024**2))
+	app = web.Application(client_max_size=8*(1024**2), middlewares=[middle])
 	app.add_routes(main_routes)
 	app.add_routes(*routes)
 	api.register(app=app)
-	aiohttp_jinja2.setup(app=app,loader=jinja2.FileSystemLoader("html"))
+	aiohttp_jinja2.setup(
+		app=app,
+		loader=jinja2.FileSystemLoader("html"),
+		autoescape=jinja2.select_autoescape(
+			enabled_extensions=("html", "xml"),
+			default_for_string=True,
+		),
+		context_processors=[context_processor],
+	)
 	handler = logging.handlers.RotatingFileHandler(filename=config.dir / 'logs' / 'webapplog.txt',maxBytes=1048576,backupCount=2,encoding="UTF-8")
 	handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
 	logger = logging.getLogger("webapp")

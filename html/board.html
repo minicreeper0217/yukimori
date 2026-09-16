@@ -331,7 +331,7 @@
   }
 </style>
 
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" defer></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" nonce="{{ nonce }}" defer></script>
 {% endblock %}
 
 
@@ -454,7 +454,7 @@
 
 {% block scripts %}
 
-<script>
+<script nonce="{{ nonce }}">
 let widgetId;
 
 document
